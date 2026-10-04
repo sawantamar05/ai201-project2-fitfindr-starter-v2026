@@ -25,9 +25,7 @@ Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
 **Why this target:**
-<!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
-     "my search is a plain keyword match and some phrasings will miss" is a
-     real answer. -->
+I chose 4 out of 5 because the outfit and fit card tools depend on the model. An occasional API error or empty response could prevent a matching query from finishing, but the agent should still complete the full process reliably in most runs.
 
 ---
 
@@ -37,65 +35,42 @@ Given a query that matches no listings, the agent stops before calling
 `suggest_outfit` and returns a message naming what to change — 5 of 5 tries.
 
 **Why this target:**
-<!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
-     about this path? -->
+I chose 5 out of 5 because this path uses a simple Python check, not a model response. When the search returns an empty list, the agent should always stop and tell the user what they can change.
 
 ---
 
 ## 3. Something about state
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know that the item your search found is the same item the
-     next tool received? Name something countable or observable.
-
-     This is the criterion people find hardest, because state failure doesn't
-     look like state failure — it looks like a tool problem. Something that
-     compares session["selected_item"] against what actually reached
-     suggest_outfit is the shape you're after. -->
+When a search finds a match, the item ID saved in session["selected_item"] should match the item ID passed to suggest_outfit in 5 out of 5 runs.
 
 
 
 **Why this target:**
-
+I chose 5 out of 5 because the code should pass the same saved item to the outfit tool every time. The model may change its wording, but it should not affect which item the tool receives.
 
 
 ---
 
 ## 4. Something about the fit card
 
-<!-- YOU WRITE THIS ONE.
-
-     The fit card calls a model, so the same input can produce different words
-     each time. That's not a bug — it's the nature of the tool. So what would
-     make it acceptable?
-
-     Think about what you'd actually be unhappy to see. A caption that never
-     mentions the price? Two different items producing the same opening
-     sentence? A card longer than a caption anyone would post? Any of those can
-     be turned into a number. -->
+For five runs using selected listings, at least 4 out of 5 fit cards contain no incorrect or invented brand, color, or price details when compared with the selected listing. If the listing's brand is null, the caption must not name a brand.
 
 
 
 **Why this target:**
-
+I chose 4 out of 5 because the model can use different wording and may occasionally add an unsupported detail. Accurate information matters because the caption should describe the actual listing, including leaving out the brand when it is unknown.
 
 
 ---
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. Speed, the empty
-     wardrobe path, what happens when the model can't be reached, whether the
-     search respects a price ceiling — anything, as long as it names a number
-     or an observable outcome. -->
+Across five searches with a specified max_price and at least one known matching listing within budget, search_listings returns a non-empty list, and every returned item's price is less than or equal to max_price — in 5 out of 5 searches.
 
 
 
 **Why this target:**
-
+I chose 5 out of 5 because the price filter is a Python comparison and should work consistently. A user should not receive items above their budget, and the search should still return matching items that are affordable.
 
 
 ---
