@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the local listings using description keywords, requested size, and maximum price. Matches every description keyword against the combined title, description, and style_tags, ignoring capitalization; matches size exactly, ignoring capitalization.
+- **Inputs:** `description` (str), `size` (str or None; None means any size), `max_price` (float or None; None means no price limit).
+- **Returns:** A list of matching listing dictionaries in their original data order. Each includes id, title, description, category, style_tags, size, condition, price, colors, brand, and platform. Every result meets all supplied filters, with price less than or equal to max_price.
+- **When it has nothing:** Returns an empty list (`[]`) when no listings match.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Calls the model to suggest an outfit pairing the selected listing with items from the user's wardrobe.
+- **Inputs:** `new_item` (dict containing a listing), `wardrobe` (dict with an `items` list of wardrobe item dictionaries).
+- **Returns:** A non-empty string describing an outfit that includes the new item, names wardrobe pieces to pair with it, and explains why they work together.
+- **When it has nothing:** If `wardrobe["items"]` is empty, returns general styling advice for the new item without claiming the user owns any suggested pieces.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Calls the model to write a short, post-ready caption about the new item and suggested outfit.
+- **Inputs:** `outfit` (str containing outfit advice), `new_item` (dict containing a listing).
+- **Returns:** A non-empty string containing a caption that describes the new item and outfit without inventing listing details.
+- **When it has nothing:** If the outfit is blank or the new item is empty, returns "Cannot create a fit card without an outfit and a selected item." without calling the model.
 
 ---
 
@@ -93,7 +93,7 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If search_listings returns an empty list, save a message in the session suggesting the user change their description, size, or budget, then stop without calling suggest_outfit or create_fit_card. Otherwise, save the first matching listing as selected_item in the session, pass it from the session to suggest_outfit, save the outfit in the session, and use the saved outfit and selected_item to call create_fit_card. Save the resulting caption in the session.
 
 **Where it lives:** `agent.py::run_agent`
 
