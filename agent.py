@@ -12,6 +12,7 @@ Build and test your three tools in `tools.py` first. Then come here.
 
     python agent.py          runs both example paths below
 """
+import re
 
 import config
 import trace
@@ -46,6 +47,50 @@ def new_session(query: str, wardrobe: dict) -> dict:
         "error": None,               # set when the run ended early
     }
 
+def parse_query(query: str) -> dict:
+    description = query.strip()
+
+    price_match = re.search(
+        r"\b(?:under|below|up to|max(?:imum)?)\s*\$?\s*(\d+(?:\.\d+)?)",
+        description,
+        flags=re.IGNORECASE,
+    )
+    max_price = float(price_match.group(1)) if price_match else None
+
+    if price_match:
+        description = (
+            description[:price_match.start()]
+            + " "
+            + description[price_match.end():]
+        )
+
+    size_match = re.search(
+        r"\bsize\s+([a-z0-9]+(?:/[a-z0-9]+)?)\b",
+        description,
+        flags=re.IGNORECASE,
+    )
+    size = size_match.group(1) if size_match else None
+
+    if size_match:
+        description = (
+            description[:size_match.start()]
+            + " "
+            + description[size_match.end():]
+        )
+
+    description = re.sub(
+        r"^\s*(?:i am |i'm )?looking for\s+",
+        "",
+        description,
+        flags=re.IGNORECASE,
+    )
+    description = " ".join(description.replace(",", " ").split())
+
+    return {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
@@ -106,10 +151,42 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         than a stack trace. The import is already at the top of this file.
     """
     session = new_session(query, wardrobe)
+    next_step = "search"
+    iterations = 0
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
-    return session
+    while True:
+        iterations += 1
+        trace.check_iterations(iterations)
+
+        if next_step == "search":
+            session["parsed"] = parse_query(session["query"])
+            session["search_results"] = search_listings(
+                **session["parsed"]
+            )
+
+            if not session["search_results"]:
+                session["error"] = (
+                    "No listings matched your search. Try different "
+                    "description keywords, another size, or a higher budget."
+                )
+                return session
+
+            session["selected_item"] = session["search_results"][0]
+            next_step = "outfit"
+
+        elif next_step == "outfit":
+            session["outfit_suggestion"] = suggest_outfit(
+                session["selected_item"],
+                session["wardrobe"],
+            )
+            next_step = "fit_card"
+
+        elif next_step == "fit_card":
+            session["fit_card"] = create_fit_card(
+                session["outfit_suggestion"],
+                session["selected_item"],
+            )
+            return session
 
 
 # ── running it directly ───────────────────────────────────────────────────────

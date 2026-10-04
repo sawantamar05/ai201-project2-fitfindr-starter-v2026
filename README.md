@@ -97,9 +97,9 @@
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** `agent.py::parse_query` uses regular expressions to extract a maximum price introduced by under, below, up to, max, or maximum, and a size introduced by size. It removes these parts and an optional leading "looking for" phrase to get the search description.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** The query is parsed into `parsed`, and search output is saved in `search_results`. The first result becomes `selected_item`. The outfit tool reads `selected_item` and `wardrobe` from the session and saves its response in `outfit_suggestion`. The caption tool reads the saved outfit and item, then saves its response in `fit_card`. If search is empty, `error` holds useful advice and the loop stops.
 
 ---
 
@@ -113,8 +113,27 @@
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30, size M'
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two outfit combinations featuring the **Y2K Baby Tee — Butterfly Print**:
+
+### Outfit 1: Classic Y2K Streetwear
+* **Bottoms:** Baggy straight-leg jeans, dark wash (`w_001`)
+* **Shoes:** Chunky white sneakers (`w_007`)
+* **Outerwear (Optional):** Vintage black denim jacket (`w_006`)
+* **Why it works:** The fitted, cropped silhouette of the baby tee balances thevolume of the high-waisted, baggy dark-wash jeans for a classic Y2K proportion play. The white sneakers tie in the white base of the tee, while the black denimjacket adds an extra layer that fits the vintage aesthetic.
+
+### Outfit 2: Casual Contrast
+* **Bottoms:** Wide-leg khaki trousers (`w_002`)
+* **Shoes:** Chunky white sneakers (`w_007`)
+* **Accessories:** Brown leather belt (`w_009`)
+* **Why it works:** Pairing the playful, pink-and-purple butterfly graphic tee with structured khaki trousers creates a fun mix of casual Y2K and minimal earthtones. Adding the brown leather belt pulls the tan trousers together while grounding the lighter top and shoes.
+
+  Fit card: This Y2K white, pink, and purple butterfly print baby tee is available on Depop for $18. Styled with baggy dark-wash jeans and chunky white sneakers, it leans into a classic early 2000s streetwear vibe.
+
+0 model calls this session, 2 served from cache
 ```
 
 **The three tools, tested one at a time**
