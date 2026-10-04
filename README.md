@@ -59,9 +59,9 @@
 
 ### `search_listings`
 
-- **What it does:** Searches the local listings using description keywords, requested size, and maximum price. Matches every description keyword against the combined title, description, and style_tags, ignoring capitalization; matches size exactly, ignoring capitalization.
+- **What it does:** Filters local listings by size and budget, then ranks them by the number of matching description keywords found in the title, description, and style_tags, ignoring capitalization.
 - **Inputs:** `description` (str), `size` (str or None; None means any size), `max_price` (float or None; None means no price limit).
-- **Returns:** A list of matching listing dictionaries in their original data order. Each includes id, title, description, category, style_tags, size, condition, price, colors, brand, and platform. Every result meets all supplied filters, with price less than or equal to max_price.
+- **Returns:** A list of listing dictionaries containing id, title, description, category, style_tags, size, condition, price, colors, brand, and platform. Results match at least one description keyword, satisfy all supplied filters, and are ordered by keyword score with original data order breaking ties. Returns at most `config.SEARCH_RESULT_LIMIT` items. Size matching accepts exact sizes and slash-separated alternatives: M matches S/M, but L does not match XL. Prices must be less than or equal to max_price.
 - **When it has nothing:** Returns an empty list (`[]`) when no listings match.
 
 ### `suggest_outfit`
@@ -120,18 +120,35 @@ $ python app.py ask '...'
 **The three tools, tested one at a time**
 
 ```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
-
+$ python -c "from tools import search_listings; print([(item['id'], item['size'], item['price']) for item in search_listings('graphic tee', size='M', max_price=30)])"
+[('lst_002', 'S/M', 18.0), ('lst_017', 'S/M', 15.0)]
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+Here are two ways to style the vintage Levi's 501 jeans using pieces from your wardrobe:
 
+### Outfit 1: Casual Streetwear
+* **Top:** White ribbed tank top (`w_003`)
+* **Outerwear:** Vintage black denim jacket (`w_006`)
+* **Shoes:** Chunky white sneakers (`w_007`)
+* **Accessories:** Black crossbody bag (`w_010`)
+
+**Why it works:**
+The medium-wash blue of the Levi's creates a classic high-contrast base againstthe white fitted tank and sneakers, keeping the look anchored in clean streetwear staples. Layering the slightly cropped black denim jacket ties in with the black crossbody bag while playing with denim-on-denim textures.
+
+### Outfit 2: Cozy & Relaxed
+* **Top:** Oversized grey crewneck sweatshirt (`w_004`)
+* **Shoes:** Black combat boots (`w_008`)
+* **Accessories:** Brown leather belt (`w_009`)
+
+**Why it works:**
+The fitted, straight-leg cut of the vintage 501s balances out the volume of theoversized grey crewneck. Tucking in the front of the sweatshirt and adding the brown leather belt pulls the casual look together, while the black combat boots give the outfit an easy, slightly grungier finish.
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
-
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
+These vintage Levi's 501 jeans in a classic medium blue wash are listed on Depop for $38. They feature natural fading at the knees for an authentic, broken-in streetwear look. Pair them with simple white sneakers for an effortless everydayoutfit.
 ```
 
 ---
