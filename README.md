@@ -13,8 +13,8 @@
 > python app.py ask 'vintage graphic tee under $30'
 > ```
 >
-> All three tools are stubs, so that last command will do nothing useful yet.
-> That's the starting position.
+> All three tools and the planning loop are implemented. The ask command
+> searches local listings, suggests an outfit, and returns a fit card.
 >
 > **The rest of this file is your submission.** Fill it in as you go.
 
@@ -39,8 +39,7 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
-
+FitFindr helps users find secondhand clothing from a local listings file by describing what they want, their size, and their budget. It ranks matching listings and selects the first result, then uses a model to suggest outfits with pieces from the user's wardrobe. It also creates a short caption about the selected item and outfit. If no listings match, it stops and suggests changing the search description, size, or budget.
 
 
 ---
@@ -183,15 +182,17 @@ These vintage Levi's 501 jeans in a classic medium blue wash are listed on Depop
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+**Moment 1**
+
+- *What I asked for:* I asked Codex to help me specify and build the search tool step by step.
+- *What came back:* The first specification used exact size matching and required every keyword. After reviewing tools.py, Codex identified that the starter expected ranked keyword matches and support for sizes such as S/M.
+- *What I changed:* I updated the search specification and implemented keyword scoring, size filtering, and a maximum-price filter. I tested matching results, an empty search, and size M with a $30 budget.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Codex to help me connect the tools through session state and stop when a search finds nothing.
+- *What came back:* Codex provided a planning loop that saves each tool's result in the session and checks search results before calling the outfit tool. It also provided commands to inspect the actual tool inputs and call counts.
+- *What I changed:* I replaced the run_agent stub with the loop and tested both paths. The saved and received item IDs matched, and the empty-search test showed zero outfit calls, zero fit card calls, and a fit_card value of None.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
