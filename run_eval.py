@@ -52,7 +52,42 @@ def run_once(scenario, use_trace=True):
 
     record = {"error": None, "session": None, "trace": "", "crashed": None}
     try:
-        record["session"] = run_agent(scenario["query"], wardrobe)
+        import agent
+        from copy import deepcopy
+        from unittest.mock import patch
+
+        record["tool_calls"] = []
+        original_search = agent.call_tool
+        original_outfit = agent.suggest_outfit
+        original_card = agent.create_fit_card
+
+        def observed_search(name, arguments):
+            record["tool_calls"].append({
+                "tool": name,
+                "inputs": deepcopy(arguments),
+            })
+            return original_search(name, arguments)
+
+        def observed_outfit(new_item, wardrobe):
+            record["tool_calls"].append({
+                "tool": "suggest_outfit",
+                "item_id": new_item.get("id"),
+            })
+            return original_outfit(new_item, wardrobe)
+
+        def observed_card(outfit, new_item):
+            record["tool_calls"].append({
+                "tool": "create_fit_card",
+                "item_id": new_item.get("id"),
+            })
+            return original_card(outfit, new_item)
+
+        with (
+            patch.object(agent, "call_tool", observed_search),
+            patch.object(agent, "suggest_outfit", observed_outfit),
+            patch.object(agent, "create_fit_card", observed_card),
+        ):
+            record["session"] = run_agent(scenario["query"], wardrobe)
     except Exception as exc:  # noqa: BLE001 — a crash is a result worth logging
         record["crashed"] = f"{type(exc).__name__}: {exc}"
         record["traceback"] = traceback.format_exc()
@@ -191,6 +226,25 @@ def write_report(rows, args):
                 f"- selected_item: {item.get('title', '(none)')}"
                 + (f" (${item.get('price')}, {item.get('platform')})" if item else ""),
                 f"- search_results: {len(session.get('search_results') or [])}",
+                "",
+            ]
+            lines += [
+                "Recorded evidence:",
+                "",
+                "```text",
+                f"tool_calls: {record.get('tool_calls', [])}",
+                f"selected_item_id: {item.get('id')}",
+                f"selected_item_brand: {item.get('brand')}",
+                f"selected_item_colors: {item.get('colors')}",
+                f"selected_item_price: {item.get('price')}",
+                f"parsed: {session.get('parsed')}",
+                "returned_item_prices: "
+                + str([
+                    (result.get("id"), result.get("price"))
+                    for result in session.get("search_results", [])
+                ]),
+                f"fit_card_is_none: {session.get('fit_card') is None}",
+                "```",
                 "",
             ]
             if session.get("outfit_suggestion"):
