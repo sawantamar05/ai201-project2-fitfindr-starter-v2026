@@ -285,10 +285,7 @@ that produced it:
 
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
-behaved differently afterwards. If the rewire didn't work, say exactly where it
-broke — the error text and the last thing that worked. That earns the point in
-full. -->
+**On the MCP move:** I registered search_listings in mcp_server.py and changed run_agent() in agent.py to call it through mcp_client.call_tool. The outfit and fit card tools still run directly. The query 'vintage graphic tee under $30' selected the same $18 Y2K Baby Tee and completed successfully after the change. The outfit and caption responses were served from cache.
 
 
 
