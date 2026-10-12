@@ -151,6 +151,7 @@ def run_agent(query: str, wardrobe: dict) -> dict:
       • A handler for ModelUnavailable, so a bad key produces a message rather
         than a stack trace. The import is already at the top of this file.
     """
+    trace.start_trace()
     session = new_session(query, wardrobe)
     next_step = "search"
     iterations = 0
@@ -165,6 +166,16 @@ def run_agent(query: str, wardrobe: dict) -> dict:
                 "search_listings",
                 session["parsed"],
             )
+            trace.step(
+                "search_listings (via MCP)",
+                inputs=str(session["parsed"]),
+                returned=session["search_results"],
+                note=(
+                    "Matches found; select the first result."
+                    if session["search_results"]
+                    else "Empty search; stop before outfit and fit card tools."
+                ),
+            )
         
 
             if not session["search_results"]:
@@ -178,16 +189,53 @@ def run_agent(query: str, wardrobe: dict) -> dict:
             next_step = "outfit"
 
         elif next_step == "outfit":
-            session["outfit_suggestion"] = suggest_outfit(
-                session["selected_item"],
-                session["wardrobe"],
+            try:
+                session["outfit_suggestion"] = suggest_outfit(
+                    session["selected_item"],
+                    session["wardrobe"],
+                )
+            except ModelUnavailable:
+                session["error"] = (
+                    "The model was unavailable while generating outfit advice. "
+                    "Check your internet connection and GEMINI_API_KEY in "
+                    ".env, then try again."
+                )
+                return session
+
+            trace.step(
+                "suggest_outfit",
+                inputs=(
+                    f"item_id={session['selected_item']['id']}, "
+                    f"wardrobe_ids="
+                    f"{[item['id'] for item in session['wardrobe']['items']]}"
+                ),
+                returned=session["outfit_suggestion"],
+                note="Outfit saved in session; proceed to create_fit_card.",
             )
             next_step = "fit_card"
 
         elif next_step == "fit_card":
-            session["fit_card"] = create_fit_card(
-                session["outfit_suggestion"],
-                session["selected_item"],
+            try:
+                session["fit_card"] = create_fit_card(
+                    session["outfit_suggestion"],
+                    session["selected_item"],
+                )
+            except ModelUnavailable:
+                session["error"] = (
+                    "The model was unavailable while generating the fit card. "
+                    "Check your internet connection and GEMINI_API_KEY in "
+                    ".env, then try again."
+                )
+                return session
+
+            trace.step(
+                "create_fit_card",
+                inputs=(
+                    f"item_id={session['selected_item']['id']}, "
+                    f"outfit={session['outfit_suggestion']}"
+                ),
+                returned=session["fit_card"],
+                note="Fit card saved in session; run complete.",
             )
             return session
 

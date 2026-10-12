@@ -276,12 +276,86 @@ that produced it:
 **Happy path**
 
 ```
-
 ```
+$ python app.py ask 'vintage graphic tee under $30' --trace
+[1] search_listings (via MCP)
+      in:  {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+      →    Matches found; select the first result.
+[2] suggest_outfit
+      in:  item_id=lst_002, wardrobe_ids=['w_001', 'w_002', 'w_003', 'w_004', 'w_005', 'w_006', 'w_007', 'w_008', 'w_009'…
+      out: Here are two outfit combinations featuring the **Y2K Baby Tee —Butterfly Print**:  ### Outfit 1: Classic Y2K …
+      →    Outfit saved in session; proceed to create_fit_card.
+[3] create_fit_card
+      in:  item_id=lst_002, outfit=Here are two outfit combinations featuring the **Y2K Baby Tee — Butterfly Print**:  ##…
+      out: This Y2K white, pink, and purple butterfly print baby tee is available on Depop for $18. Styled with baggy dar…
+      →    Fit card saved in session; run complete.
+```
+```
+
+### Failure-mode checks
 
 **Empty search**
 
 ```
+$ python app.py ask 'designer ballgown size XXS under $5' --trace
+[1] search_listings (via MCP)
+      in:  {'description': 'designer ballgown', 'size': 'XXS', 'max_price': 5.0}
+      out: [] (empty)
+      →    Empty search; stop before outfit and fit card tools.
+
+No listings matched your search. Try different description keywords, another size, or a higher budget.
+
+0 model calls this session
+```
+
+```
+$ python app.py ask 'designer ballgown size XXS under $5'
+
+No listings matched your search. Try different description keywords, another size, or a higher budget.
+
+0 model calls this session
+```
+
+The agent stopped and suggested changing the keywords, size, or budget.
+
+```
+**Empty wardrobe**
+
+```
+$ python app.py ask 'vintage graphic tee under $30' --empty-wardrobe
+(running with an empty wardrobe)
+
+Found: Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+Outfit: ### Styling Advice for the Y2K Butterfly Baby Tee
+
+This fitted, cropped baby tee in white with pink and purple graphics lendsitself well to nostalgic 2000s looks or mixed-aesthetic styling. Because it is form-fitting and short, balance the proportions with looser bottoms orlayer it for different textures.
+
+**Model unavailable**
+
+```
+$ GEMINI_API_KEY=invalid-test-key AI201_CACHE=0 python app.py ask 'vintage graphic tee under $30'
+
+The model was unavailable while generating outfit advice. Check your internet connection and GEMINI_API_KEY in .env, then try again.
+
+1 model calls this session
+```
+
+I temporarily supplied an invalid key for this command and disabled caching to force a real model request. The agent caught ModelUnavailable and returned actionable advice instead of a traceback. The saved key in .env was unchanged.
+
+### Suggested Complementary Pieces
+* Bottoms: Low-rise baggy cargo pants, a denim mini skirt, or wide-leg track pants to lean into the Y2K aesthetic.
+* Footwear: Chunky platform sandals, retro sneakers (like Nike Shox or retro runners), or platform mules.
+* Outerwear: A cropped zip-up hoodie, a vintage leather jacket, or an unbuttoned mesh long-sleeve top worn underneath for a layered look.
+* Accessories: A small shoulder bag (baguette style), butterfly clawclips, or beaded jelly jewelry.
+
+Fit card: This Y2K white baby tee features a pink and purple butterfly graphic and a cropped, fitted silhouette. Listed on Depop for $18, it captures a nostalgic early 2000s mood. Pair it with low-rise baggy cargo pants and retro sneakers for an effortless throwback look.
+
+2 model calls this session, 645 prompt + 254 output tokens
+```
+
+The agent returned general styling suggestions without claiming the user owned the suggested pieces.
 
 ```
 
