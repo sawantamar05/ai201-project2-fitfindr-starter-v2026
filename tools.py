@@ -229,7 +229,13 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         "Include a specific outfit pairing and describe the vibe. "
         "Use only listing details provided above for brand, colors, and price. "
         "If the brand is None or missing, do not name a brand. "
-        "Do not invent details or claim the user bought the item. "
+        "Do not invent details. The user is browsing a listing; "
+        "no purchase or ownership has been confirmed. "
+        "Describe the item as listed or available, and describe outfit "
+        "pairings as suggestions using wording such as 'Pair it with'. "
+        "Never imply a completed purchase, ownership, or actual wearing: "
+        "avoid phrases such as 'Scored this', 'I bought', 'picked up', "
+        "'my new', or 'I wore'. "
         "Return only the caption."
     )
 

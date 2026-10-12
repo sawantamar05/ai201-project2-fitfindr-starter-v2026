@@ -437,21 +437,29 @@ The agent returned general styling suggestions without claiming the user owned t
 
      `python run_eval.py --label after` -->
 
-**What I changed:**
+**What I changed:** I strengthened the prompt in tools.py::create_fit_card to state that the user is browsing, with no confirmed purchase or ownership. It asks for listing language and suggested pairings, and explicitly excludes phrases such as "Scored this" and "I bought".
 
-**Which failure it was meant to fix:**
+**Which failure it was meant to fix:** The baseline contained unsupported purchase claims in criterion 1, Try 5 and criterion 5, Try 3. I will compare all 25 generated captions before and after for claims that the user purchased, owns, or wore the item. This is an additional diagnostic measure; the five original criteria and their targets remain unchanged.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before the outfit tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Saved item ID matches the outfit tool input | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card has accurate brand, color, and price details | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Search returns non-empty results within budget | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Did it help, and how do I know:**
+
+The prompt change helped in this comparison. I reviewed all 25 generated captions in each run, including the empty-wardrobe diagnostic. Unsupported purchase, ownership, or actual-wearing claims decreased from 2/25 before to 0/25 after. The two baseline examples began "Scored this" in criterion 1, Try 5 and criterion 5, Try 3.
+
+All five original criteria remained MET (5/5) in their assigned scenarios. The scenarios, model, temperature, and criteria stayed the same, and caching was off for both runs. Because model outputs vary and the sample is small, this is evidence of improvement in these runs, not a guarantee.
+
+One issue remains: the after-run matching-query Try 1 described the item as "unbranded" even though its brand was unknown. The change addressed purchase claims, not every possible unsupported detail.
+
+Full after-run evidence: [After run log](results/run_2026-10-11_1925_after.md).
 
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
