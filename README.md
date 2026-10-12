@@ -278,7 +278,7 @@ The caption uses the listed colors and price without inventing a brand.
 
 Results produced by `tools.py::search_listings` through MCP and recorded by `run_eval.py::write_report`.
 
-```text
+```
 parsed: {'description': 'graphic tee', 'size': None, 'max_price': 30.0}
 returned_item_prices: [('lst_002', 18.0), ('lst_006', 24.0), ('lst_017', 15.0), ('lst_033', 19.0), ('lst_011', 27.0), ('lst_012', 20.0), ('lst_015', 26.0)]
 ```
@@ -308,15 +308,21 @@ Full evidence for all five tries per scenario: [Before run log](results/run_2026
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes all three tools | 4 of 5 | MET (5/5) | Every try recorded all three tool calls and returned a non-empty fit card. |
+| 2 | Empty search stops before the outfit tool | 5 of 5 | MET (5/5) | Every try recorded only search, left fit_card as None, and suggested what to change. |
+| 3 | Saved item ID matches the outfit tool input | 5 of 5 | MET (5/5) | The saved item ID and the actual suggest_outfit input ID were lst_002 in every try. |
+| 4 | Fit card has accurate brand, color, and price details | 4 of 5 | MET (5/5) | All five captions in this scenario matched the listing's colors and $18 price and named no brand. |
+| 5 | Search returns non-empty results within budget | 5 of 5 | MET (5/5) | Every try returned seven items, all priced at or below $30. |
 
 **Diagnoses**
 
+All five criteria met their original targets in the tested scenarios, so there are no criterion misses to diagnose. However, the tests were narrow: most matching scenarios selected the same butterfly tee, and the budget scenario repeated one price ceiling. These results do not prove reliability across all listings or query formats.
 
+Criterion 4 checks brand, color, and price accuracy but misses other unsupported claims. In criterion 1, Try 5, the caption began "Scored this early 2000s butterfly print baby tee"; criterion 5, Try 3 also began "Scored this". This implies a purchase even though the user only searched for an item.
+
+The issue occurs in the model output from tools.py::create_fit_card. Its prompt already says not to claim the user bought the item, but the model sometimes uses purchase language anyway. I will strengthen this one prompt and compare purchase claims before and after using the same scenarios.
+
+For future testing, I would tighten criterion 4 to cover unsupported purchase claims as well as listing details. I am keeping the original criterion and target unchanged for this comparison.
 
 ---
 
