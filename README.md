@@ -194,6 +194,12 @@ These vintage Levi's 501 jeans in a classic medium blue wash are listed on Depop
 - *What came back:* Codex provided a planning loop that saves each tool's result in the session and checks search results before calling the outfit tool. It also provided commands to inspect the actual tool inputs and call counts.
 - *What I changed:* I replaced the run_agent stub with the loop and tested both paths. The saved and received item IDs matched, and the empty-search test showed zero outfit calls, zero fit card calls, and a fit_card value of None.
 
+**Part 2 — Testing and improvement**
+
+- *What I asked for:* I asked Codex for step-by-step help moving search onto MCP, recording test evidence, and comparing the before and after results.
+- *What came back:* Codex suggested an MCP wrapper, model-failure handlers, trace calls, and evaluation wrappers that recorded actual tool inputs. It also helped review the outputs and identified captions saying "Scored this" without a confirmed purchase.
+- *What I changed:* I implemented and ran these steps, strengthened the caption prompt, and repeated the same evaluation with caching off. I documented the decrease in unsupported purchase claims from 2/25 to 0/25 and the remaining issue where an unknown brand was described as "unbranded".
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -470,9 +476,13 @@ Full after-run evidence: [After run log](results/run_2026-10-11_1925_after.md).
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped where
-     you did. "I ran out of time" is fine if it's true. Pretending nothing is
-     left is not. -->
+No original criterion remained missed in its assigned test scenario, but the agent still has limitations.
+
+In the after-run matching-query scenario, Try 1, the caption called the tee "unbranded" even though brand was None, meaning unknown. I would explicitly distinguish unknown from unbranded in the caption prompt and test listings with missing brands. I left this for future work to keep this unit's improvement limited to one measured change.
+
+Search relevance is also imperfect: a graphic tee query can return pants or other items whose descriptions mention tees. Future work could improve keyword matching and test more clothing categories, sizes, and budgets.
+
+Most matching scenarios selected the same butterfly tee. Broader testing is needed before claiming the results generalize to other listings. The purchase-claim improvement produced no such claims in 25 after-run captions, but that does not guarantee they will never occur.
 
 
 
